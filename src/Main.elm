@@ -1,6 +1,7 @@
 module Main exposing (Brick, Model, Msg(..), init, main, update, view)
 
 import Browser
+import Browser.Events exposing (onAnimationFrameDelta)
 import Html exposing (Html, div, h1, img, text)
 import Html.Attributes exposing (src)
 import Svg exposing (..)
@@ -12,7 +13,7 @@ import Svg.Attributes exposing (..)
 
 
 type alias Model =
-    { bricks : List Brick
+    { brick : Brick
     }
 
 
@@ -41,7 +42,7 @@ blue =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { bricks = [ { y = 10.0, x = 0.0, colors = [ red, green, blue ] } ] }, Cmd.none )
+    ( { brick = { y = 10.0, x = 0.0, colors = [ red, green, blue ] } }, Cmd.none )
 
 
 
@@ -49,12 +50,24 @@ init =
 
 
 type Msg
-    = NoOp
+    = TimeUpdate Float
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    ( model, Cmd.none )
+    case msg of
+        TimeUpdate time ->
+            let
+                brick =
+                    model.brick
+
+                newBrick =
+                    { brick | y = model.brick.y + 1 * time }
+
+                newModel =
+                    { model | brick = newBrick }
+            in
+            ( newModel, Cmd.none )
 
 
 
@@ -64,7 +77,7 @@ update msg model =
 view : Model -> Html Msg
 view model =
     svg [ width "600", height "800", viewBox "0 0 600 800" ]
-        (List.map renderBrick model.bricks)
+        [ renderBrick model.brick ]
 
 
 renderBrick : Brick -> Svg Msg
@@ -96,11 +109,16 @@ renderBlock brick index (Color color) =
 ---- PROGRAM ----
 
 
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch [ onAnimationFrameDelta TimeUpdate ]
+
+
 main : Program () Model Msg
 main =
     Browser.element
         { view = view
         , init = \_ -> init
         , update = update
-        , subscriptions = always Sub.none
+        , subscriptions = subscriptions
         }

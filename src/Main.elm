@@ -1,5 +1,6 @@
-module Main exposing (Brick, Model, Msg(..), init, main, update, view)
+module Main exposing (Model, Msg(..), init, main, update, view)
 
+import Brick exposing (Brick)
 import Browser
 import Browser.Events exposing (onAnimationFrameDelta)
 import Html exposing (Html, div, h1, img, text)
@@ -17,32 +18,9 @@ type alias Model =
     }
 
 
-type alias Brick =
-    { y : Float
-    , x : Float
-    , colors : List Color
-    }
-
-
-type Color
-    = Color String
-
-
-red =
-    Color "#ff0000"
-
-
-green =
-    Color "#00ff00"
-
-
-blue =
-    Color "#0000ff"
-
-
 init : ( Model, Cmd Msg )
 init =
-    ( { brick = { y = 10.0, x = 0.0, colors = [ red, green, blue ] } }, Cmd.none )
+    ( { brick = Brick.init }, Cmd.none )
 
 
 
@@ -62,7 +40,7 @@ update msg model =
                     model.brick
 
                 newBrick =
-                    { brick | y = model.brick.y + 1 * time }
+                    Brick.fall time brick
 
                 newModel =
                     { model | brick = newBrick }
@@ -77,32 +55,7 @@ update msg model =
 view : Model -> Html Msg
 view model =
     svg [ width "600", height "800", viewBox "0 0 600 800" ]
-        [ renderBrick model.brick ]
-
-
-renderBrick : Brick -> Svg Msg
-renderBrick brick =
-    g []
-        (List.indexedMap (renderBlock brick) brick.colors)
-
-
-renderBlock : Brick -> Int -> Color -> Svg Msg
-renderBlock brick index (Color color) =
-    rect
-        [ x (String.fromFloat brick.x)
-        , y
-            (String.fromFloat
-                (brick.y
-                    + (toFloat index * 50.0)
-                )
-            )
-        , rx "15"
-        , ry "15"
-        , width "50"
-        , height "50"
-        , fill color
-        ]
-        []
+        [ Brick.render model.brick ]
 
 
 
